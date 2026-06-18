@@ -64,10 +64,84 @@ val PipIcon: ImageVector
         }
     }.build()
 
+val VolumeOnIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "VolumeOn", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f
+    ).apply {
+        path(fill = SolidColor(Color.White)) {
+            moveTo(3f, 9f)
+            verticalLineTo(15f)
+            horizontalLineTo(7f)
+            lineTo(12f, 20f)
+            verticalLineTo(4f)
+            lineTo(7f, 9f)
+            horizontalLineTo(3f)
+            close()
+            moveTo(16.5f, 12f)
+            curveTo(16.5f, 10.23f, 15.48f, 8.71f, 14f, 7.97f)
+            verticalLineTo(16.02f)
+            curveTo(15.48f, 15.29f, 16.5f, 13.77f, 16.5f, 12f)
+            close()
+            moveTo(14f, 3.23f)
+            verticalLineTo(5.29f)
+            curveTo(16.89f, 6.15f, 19f, 8.83f, 19f, 12f)
+            curveTo(19f, 15.17f, 16.89f, 17.85f, 14f, 18.71f)
+            verticalLineTo(20.77f)
+            curveTo(18.01f, 19.86f, 21f, 16.28f, 21f, 12f)
+            curveTo(21f, 7.72f, 18.01f, 4.14f, 14f, 3.23f)
+            close()
+        }
+    }.build()
+
+val VolumeOffIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "VolumeOff", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f
+    ).apply {
+        path(fill = SolidColor(Color.White)) {
+            moveTo(16.5f, 12f)
+            curveTo(16.5f, 10.23f, 15.48f, 8.71f, 14f, 7.97f)
+            verticalLineTo(10.18f)
+            lineTo(16.45f, 12.63f)
+            curveTo(16.48f, 12.43f, 16.5f, 12.22f, 16.5f, 12f)
+            close()
+            moveTo(19f, 12f)
+            curveTo(19f, 12.94f, 18.8f, 13.82f, 18.46f, 14.64f)
+            lineTo(19.97f, 16.15f)
+            curveTo(20.63f, 14.91f, 21f, 13.5f, 21f, 12f)
+            curveTo(21f, 7.72f, 18.01f, 4.14f, 14f, 3.23f)
+            verticalLineTo(5.29f)
+            curveTo(16.89f, 6.15f, 19f, 8.83f, 19f, 12f)
+            close()
+            moveTo(4.27f, 3f)
+            lineTo(3f, 4.27f)
+            lineTo(7.73f, 9f)
+            horizontalLineTo(3f)
+            verticalLineTo(15f)
+            horizontalLineTo(7f)
+            lineTo(12f, 20f)
+            verticalLineTo(13.27f)
+            lineTo(16.25f, 17.53f)
+            curveTo(15.58f, 18.05f, 14.83f, 18.46f, 14f, 18.7f)
+            verticalLineTo(20.77f)
+            curveTo(15.38f, 20.45f, 16.63f, 19.82f, 17.68f, 18.96f)
+            lineTo(19.73f, 21f)
+            lineTo(21f, 19.73f)
+            lineTo(12f, 10.73f)
+            lineTo(4.27f, 3f)
+            close()
+            moveTo(12f, 4f)
+            lineTo(9.91f, 6.09f)
+            lineTo(12f, 8.18f)
+            verticalLineTo(4f)
+            close()
+        }
+    }.build()
+
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class MainActivity : ComponentActivity() {
 
     private var isPipMode by mutableStateOf(false)
+    private var isMuted by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +167,7 @@ class MainActivity : ComponentActivity() {
                                 .background(Color.Black)
                         ) {
                             MJPEGVideo()
-                            AudioPlayer()
+                            AudioPlayer(isMuted)
                         }
 
                         // Floating Controls Area (Upper Right, Hidden when in PiP)
@@ -111,6 +185,17 @@ class MainActivity : ComponentActivity() {
                                     color = Color.Gray,
                                     modifier = Modifier.padding(end = 4.dp)
                                 )
+
+                                IconButton(
+                                    onClick = { isMuted = !isMuted },
+                                    modifier = Modifier.background(Color.DarkGray.copy(alpha = 0.5f), CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = if (isMuted) VolumeOffIcon else VolumeOnIcon,
+                                        contentDescription = if (isMuted) "Unmute" else "Mute",
+                                        tint = Color.White
+                                    )
+                                }
 
                                 IconButton(
                                     onClick = { triggerPiP() },
@@ -181,7 +266,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AudioPlayer() {
+    fun AudioPlayer(isMuted: Boolean) {
         val context = LocalContext.current
         val exoPlayer = remember {
             ExoPlayer.Builder(context).build().apply {
@@ -190,6 +275,10 @@ class MainActivity : ComponentActivity() {
                 prepare()
                 playWhenReady = true
             }
+        }
+
+        LaunchedEffect(isMuted) {
+            exoPlayer.volume = if (isMuted) 0f else 1f
         }
 
         DisposableEffect(Unit) {
