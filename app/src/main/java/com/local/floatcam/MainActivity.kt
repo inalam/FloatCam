@@ -1,4 +1,4 @@
-package com.local.purestream
+package com.local.floatcam
 
 import android.app.PictureInPictureParams
 import android.os.Build
@@ -22,8 +22,6 @@ import androidx.media3.common.util.UnstableApi
 
 @androidx.annotation.OptIn(UnstableApi::class)
 class MainActivity : ComponentActivity() {
-
-    private var player: ExoPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,10 +62,8 @@ class MainActivity : ComponentActivity() {
         )
 
         DisposableEffect(Unit) {
-            player = exoPlayer
             onDispose {
                 exoPlayer.release()
-                player = null
             }
         }
     }

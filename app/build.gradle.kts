@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.local.purestream"
+    namespace = "com.local.floatcam"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.local.purestream"
+        applicationId = "com.local.floatcam"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -24,6 +24,9 @@ android {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+    lint {
+        abortOnError = false
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

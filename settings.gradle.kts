@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "PureStream"
+rootProject.name = "FloatCam"
 include(":app")
