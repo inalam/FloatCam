@@ -25,12 +25,9 @@ The app allows you to dynamically set your camera's IP address directly from the
 You can also open the camera's web panel directly from the app's settings menu.
 
 ## Cloud Build (GitHub Actions)
-FloatCam is configured with a GitHub Actions workflow (`.github/workflows/build.yml`) that compiles the APK completely in the cloud.
+FloatCam is configured with a GitHub Actions workflow (`.github/workflows/build.yml`) that compiles the APK completely in the cloud and automatically publishes it.
 
-1. Push this repository to GitHub.
-2. Go to the **Actions** tab on your GitHub repository page.
-3. The **Build Android APK** workflow will automatically run.
-4. Once completed, scroll to the bottom of the workflow summary and download the `floatcam-debug` artifact (which will be a `.zip` file).
-5. Extract the `.zip` to retrieve your compiled `.apk` and sideload it onto your Android device.
-
-> **Note:** GitHub Actions natively compresses all artifacts into a `.zip` file to save server bandwidth. You must extract it before installing.
+1. Push your changes to the `main` or `master` branch.
+2. The **Build Android APK** workflow will automatically run.
+3. Once completed, go to the **Releases** section on the right side of your GitHub repository.
+4. Download the compiled `.apk` directly from the latest release and sideload it onto your Android device.

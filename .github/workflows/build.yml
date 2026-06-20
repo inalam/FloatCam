@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
@@ -39,3 +41,12 @@ jobs:
         with:
           name: floatcam-debug
           path: output_apk/*.apk
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        with:
+          tag_name: "build-${{ github.run_number }}"
+          name: "FloatCam Build #${{ github.run_number }}"
+          files: output_apk/*.apk
+          generate_release_notes: true
