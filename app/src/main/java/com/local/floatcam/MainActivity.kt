@@ -154,6 +154,11 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val context = LocalContext.current
+            val sharedPrefs = remember { context.getSharedPreferences("FloatCamPrefs", android.content.Context.MODE_PRIVATE) }
+            var cameraUrl by remember { mutableStateOf(sharedPrefs.getString("cameraUrl", "http://192.168.1.35:8080") ?: "http://192.168.1.35:8080") }
+            var showSettingsDialog by remember { mutableStateOf(false) }
+
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -166,8 +171,8 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .background(Color.Black)
                         ) {
-                            MJPEGVideo()
-                            AudioPlayer(isMuted)
+                            MJPEGVideo(cameraUrl)
+                            AudioPlayer(isMuted, cameraUrl)
                         }
 
                         // Floating Controls Area (Upper Right, Hidden when in PiP)
@@ -209,7 +214,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 IconButton(
-                                    onClick = { openSettings() },
+                                    onClick = { showSettingsDialog = true },
                                     modifier = Modifier.background(Color.DarkGray.copy(alpha = 0.5f), CircleShape)
                                 ) {
                                     Icon(
@@ -220,6 +225,53 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+
+                        if (showSettingsDialog) {
+                            var tempUrl by remember { mutableStateOf(cameraUrl) }
+                            AlertDialog(
+                                onDismissRequest = { showSettingsDialog = false },
+                                title = { Text("Settings") },
+                                text = {
+                                    Column {
+                                        Text("Camera Base URL")
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        OutlinedTextField(
+                                            value = tempUrl,
+                                            onValueChange = { tempUrl = it },
+                                            singleLine = true,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        var newUrl = tempUrl.trim()
+                                        if (newUrl.isNotEmpty() && !newUrl.startsWith("http")) {
+                                            newUrl = "http://$newUrl"
+                                        }
+                                        cameraUrl = newUrl
+                                        sharedPrefs.edit().putString("cameraUrl", newUrl).apply()
+                                        showSettingsDialog = false
+                                    }) {
+                                        Text("Save & Reload")
+                                    }
+                                },
+                                dismissButton = {
+                                    Row {
+                                        TextButton(onClick = {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(cameraUrl))
+                                            context.startActivity(intent)
+                                            showSettingsDialog = false
+                                        }) {
+                                            Text("Web Panel")
+                                        }
+                                        TextButton(onClick = { showSettingsDialog = false }) {
+                                            Text("Cancel")
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -227,7 +279,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun MJPEGVideo() {
+    fun MJPEGVideo(cameraUrl: String) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
@@ -245,36 +297,42 @@ class MainActivity : ComponentActivity() {
                         setSupportZoom(true)
                     }
                     setBackgroundColor(android.graphics.Color.BLACK)
-                    val html = """
-                        <html>
-                        <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-                        <style>
-                        body { margin: 0; padding: 0; background-color: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                        img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-                        </style>
-                        </head>
-                        <body>
-                        <img src="http://192.168.1.35:8080/video" />
-                        </body>
-                        </html>
-                    """.trimIndent()
-                    loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
                 }
+            },
+            update = { webView ->
+                val html = """
+                    <html>
+                    <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+                    <style>
+                    body { margin: 0; padding: 0; background-color: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                    img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+                    </style>
+                    </head>
+                    <body>
+                    <img src="$cameraUrl/video" />
+                    </body>
+                    </html>
+                """.trimIndent()
+                webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
             }
         )
     }
 
     @Composable
-    fun AudioPlayer(isMuted: Boolean) {
+    fun AudioPlayer(isMuted: Boolean, cameraUrl: String) {
         val context = LocalContext.current
         val exoPlayer = remember {
             ExoPlayer.Builder(context).build().apply {
-                val mediaItem = MediaItem.fromUri("http://192.168.1.35:8080/audio.wav")
-                setMediaItem(mediaItem)
-                prepare()
                 playWhenReady = true
             }
+        }
+
+        LaunchedEffect(cameraUrl) {
+            val mediaItem = MediaItem.fromUri("$cameraUrl/audio.wav")
+            exoPlayer.setMediaItem(mediaItem)
+            exoPlayer.prepare()
+            exoPlayer.play()
         }
 
         LaunchedEffect(isMuted) {
@@ -286,11 +344,6 @@ class MainActivity : ComponentActivity() {
                 exoPlayer.release()
             }
         }
-    }
-
-    private fun openSettings() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://192.168.1.35:8080"))
-        startActivity(intent)
     }
 
     private fun triggerPiP() {
