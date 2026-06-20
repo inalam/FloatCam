@@ -142,6 +142,7 @@ class MainActivity : ComponentActivity() {
 
     private var isPipMode by mutableStateOf(false)
     private var isMuted by mutableStateOf(false)
+    private var volume by mutableStateOf(1f)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -172,7 +173,7 @@ class MainActivity : ComponentActivity() {
                                 .background(Color.Black)
                         ) {
                             MJPEGVideo(cameraUrl)
-                            AudioPlayer(isMuted, cameraUrl)
+                            AudioPlayer(isMuted, volume, cameraUrl)
                         }
 
                         // Floating Controls Area (Upper Right, Hidden when in PiP)
@@ -201,6 +202,21 @@ class MainActivity : ComponentActivity() {
                                         tint = Color.White
                                     )
                                 }
+
+                                Slider(
+                                    value = volume,
+                                    onValueChange = { 
+                                        volume = it
+                                        if (it > 0f) isMuted = false
+                                        else if (it == 0f) isMuted = true
+                                    },
+                                    modifier = Modifier.width(100.dp),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color.White,
+                                        activeTrackColor = Color.White,
+                                        inactiveTrackColor = Color.DarkGray
+                                    )
+                                )
 
                                 IconButton(
                                     onClick = { triggerPiP() },
@@ -320,7 +336,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AudioPlayer(isMuted: Boolean, cameraUrl: String) {
+    fun AudioPlayer(isMuted: Boolean, volume: Float, cameraUrl: String) {
         val context = LocalContext.current
         val exoPlayer = remember {
             ExoPlayer.Builder(context).build().apply {
@@ -335,8 +351,8 @@ class MainActivity : ComponentActivity() {
             exoPlayer.play()
         }
 
-        LaunchedEffect(isMuted) {
-            exoPlayer.volume = if (isMuted) 0f else 1f
+        LaunchedEffect(isMuted, volume) {
+            exoPlayer.volume = if (isMuted) 0f else volume
         }
 
         DisposableEffect(Unit) {
