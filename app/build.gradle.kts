@@ -7,11 +7,20 @@ android {
     namespace = "com.local.floatcam"
     compileSdk = 34
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("SIGNING_STORE_FILE") ?: "keystore.p12")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: "floatcam123"
+            keyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: "floatcam"
+            keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: "floatcam123"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.local.floatcam"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 3
         versionName = "1.5"
 
         vectorDrawables {
@@ -23,6 +32,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     lint {

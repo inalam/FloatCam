@@ -9,8 +9,10 @@ import android.os.Bundle
 import android.util.Rational
 import android.view.ViewGroup
 import android.webkit.WebView
-import androidx.activity.ComponentActivity
+import android.view.WindowManager
+import androidx.activity.compose.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -146,6 +148,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         
         val versionText = try {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
@@ -160,7 +163,11 @@ class MainActivity : ComponentActivity() {
             var cameraUrl by remember { mutableStateOf(sharedPrefs.getString("cameraUrl", "http://192.168.1.35:8080") ?: "http://192.168.1.35:8080") }
             var showSettingsDialog by remember { mutableStateOf(false) }
 
-            MaterialTheme {
+            BackHandler {
+                (context as? android.app.Activity)?.finishAndRemoveTask()
+            }
+
+            MaterialTheme(colorScheme = darkColorScheme()) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Black
@@ -323,10 +330,25 @@ class MainActivity : ComponentActivity() {
                     <style>
                     body { margin: 0; padding: 0; background-color: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
                     img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+                    .loader { border: 4px solid #333; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; position: absolute; }
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
                     </style>
+                    <script>
+                    function reconnect() {
+                        var img = document.getElementById('stream');
+                        setTimeout(function() {
+                            img.src = "$cameraUrl/video?" + new Date().getTime();
+                        }, 1000);
+                    }
+                    function loaded() {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('stream').style.display = 'block';
+                    }
+                    </script>
                     </head>
                     <body>
-                    <img src="$cameraUrl/video" />
+                    <div id="loader" class="loader"></div>
+                    <img id="stream" src="$cameraUrl/video" onload="loaded()" onerror="reconnect()" style="display:none;" />
                     </body>
                     </html>
                 """.trimIndent()

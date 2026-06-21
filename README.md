@@ -3,7 +3,7 @@
 FloatCam is a lightweight, fully local Android IP Camera viewer built entirely with Kotlin, Jetpack Compose, and Media3. It focuses on zero tracking, zero ads, and pure functionality with a modern, AMOLED Black UI.
 
 ### Why build a custom app?
-We built FloatCam because the built-in IP Webcam web view **does not support Picture-in-Picture (PiP)**. FloatCam solves this by providing a dedicated app that can float over your other apps while you monitor your camera.
+We built FloatCam because the built-in [IP Webcam](https://play.google.com/store/apps/details?id=com.pas.webcam) web view **does not support Picture-in-Picture (PiP)**. FloatCam solves this by providing a dedicated app that can float over your other apps while you monitor your camera.
 
 ### Web Version
 Looking for a desktop solution? Check out the [FloatCam Chrome Extension](https://github.com/inalam/FloatCam-ChromeExtension).
