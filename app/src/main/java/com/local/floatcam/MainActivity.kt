@@ -10,7 +10,7 @@ import android.util.Rational
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.view.WindowManager
-import androidx.activity.compose.ComponentActivity
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
